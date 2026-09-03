@@ -1,0 +1,55 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: document-management-mysql
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: ${DB_NAME:-document_management}
+      MYSQL_USER: ${DB_USER:-document_management}
+      MYSQL_PASSWORD: ${DB_PASSWORD:-document_management}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:-root}
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  backend:
+    image: ${DOCKERHUB_REPO:-jatinpaulsingh/document-management-mvp}-backend:latest
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: document-management-backend
+    restart: unless-stopped
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ${DB_NAME:-document_management}
+      DB_USER: ${DB_USER:-document_management}
+      DB_PASSWORD: ${DB_PASSWORD:-document_management}
+      STORAGE_BASE_PATH: /app/common/storage/files
+    volumes:
+      - document_storage:/app/common/storage/files
+    depends_on:
+      mysql:
+        condition: service_healthy
+
+  frontend:
+    image: ${DOCKERHUB_REPO:-jatinpaulsingh/document-management-mvp}-frontend:latest
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        VITE_API_BASE_URL: /api/v1
+    container_name: document-management-frontend
+    restart: unless-stopped
+    ports:
+      - "${APP_PORT:-8080}:80"
+    depends_on:
+      - backend
+
+volumes:
+  mysql_data:
+  document_storage:

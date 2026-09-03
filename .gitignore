@@ -1,0 +1,73 @@
+# Environment / secrets
+.env
+.env.*
+!.env.example
+
+# macOS
+.DS_Store
+
+# Node
+node_modules/
+frontend/node_modules/
+backend/frontend/node_modules/
+
+# Build output
+frontend/dist/
+backend/frontend/dist/
+
+# Yii runtime / cache / logs
+backend/runtime/
+backend/api/runtime/
+backend/backend/runtime/
+backend/common/runtime/
+backend/console/runtime/
+backend/frontend/runtime/
+backend/environments/*/*/runtime/
+
+# Uploaded file storage
+backend/common/storage/files/
+
+# Logs
+*.log
+
+# Temporary / backup files
+*.bak
+*.backup
+*.bak-history
+*.bak-share
+*.bak-shared-files
+*.bak-shared-tabs
+*.before-final-upload-ux
+*.before-pagination-upload
+*.before-final-fix
+*.before-final-upload-fix
+*.before-upload-validation
+*.before-validation-fix
+*.ui-backup
+
+# IDE
+.idea/
+.vscode/
+
+# Terraform generated state / providers
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.*
+terraform/crash.log
+terraform/crash.*.log
+terraform/*.tfvars
+
+# Keep Terraform example variables
+!terraform/terraform.tfvars.example
+
+# Coverage / test output
+coverage/
+.phpunit.result.cache
+
+# Additional editor/history backups
+*.bak-*
+*.before-*
+
+# All backup/history copies
+*.backup*
+*.bak*

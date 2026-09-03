@@ -1,0 +1,78 @@
+#cloud-config
+
+package_update: true
+package_upgrade: true
+
+packages:
+  - ca-certificates
+  - curl
+  - git
+  - docker.io
+  - docker-compose-plugin
+
+write_files:
+  - path: /usr/local/bin/setup-document-management.sh
+    permissions: "0755"
+    content: |
+      #!/usr/bin/env bash
+      set -euo pipefail
+
+      DEVICE="${volume_device}"
+      MOUNT_POINT="/srv/document-storage"
+
+      mkdir -p "$MOUNT_POINT"
+
+      # Wait briefly for the EBS volume attachment.
+      for _ in $(seq 1 30); do
+        if [ -b "$DEVICE" ]; then
+          break
+        fi
+        sleep 2
+      done
+
+      if [ ! -b "$DEVICE" ]; then
+        echo "Storage device $DEVICE was not attached."
+        exit 1
+      fi
+
+      if ! blkid "$DEVICE" >/dev/null 2>&1; then
+        mkfs.ext4 "$DEVICE"
+      fi
+
+      UUID="$(blkid -s UUID -o value "$DEVICE")"
+
+      if ! grep -q "$UUID" /etc/fstab; then
+        echo "UUID=$UUID $MOUNT_POINT ext4 defaults,nofail 0 2" >> /etc/fstab
+      fi
+
+      mount -a
+      chown -R root:docker "$MOUNT_POINT"
+      chmod 0775 "$MOUNT_POINT"
+
+      systemctl enable --now docker
+
+      if [ ! -d "${repo_dir}/.git" ]; then
+        mkdir -p "$(dirname "${repo_dir}")"
+        git clone "${repo_url}" "${repo_dir}"
+      else
+        git -C "${repo_dir}" pull --ff-only
+      fi
+
+      mkdir -p "${repo_dir}/backend/common/storage/files"
+
+      # Keep application file storage on the dedicated encrypted volume.
+      if [ ! -L "${repo_dir}/backend/common/storage/files" ]; then
+        rm -rf "${repo_dir}/backend/common/storage/files"
+        ln -s "$MOUNT_POINT" "${repo_dir}/backend/common/storage/files"
+      fi
+
+      cd "${repo_dir}"
+
+      if [ -f ".env.example" ] && [ ! -f ".env" ]; then
+        cp .env.example .env
+      fi
+
+      docker compose up -d --build
+
+runcmd:
+  - /usr/local/bin/setup-document-management.sh
