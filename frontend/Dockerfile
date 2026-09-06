@@ -8,9 +8,12 @@ RUN npm ci
 COPY . .
 
 ARG VITE_API_BASE_URL=/api/v1
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ARG VITE_APP_ENV=development
 
-RUN npm run build
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+ENV VITE_APP_ENV=$VITE_APP_ENV
+
+RUN npm run build -- --mode $VITE_APP_ENV
 
 
 FROM nginx:1.27-alpine

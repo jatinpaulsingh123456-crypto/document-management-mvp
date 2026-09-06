@@ -24,8 +24,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'OPTIONS') {
     exit;
 }
 
-defined('YII_DEBUG') or define('YII_DEBUG', true);
-defined('YII_ENV') or define('YII_ENV', 'dev');
+$environmentConfig = require __DIR__ . '/../../common/config/environment.php';
+
+defined('YII_DEBUG') or define('YII_DEBUG', $environmentConfig['yiiDebug']);
+defined('YII_ENV') or define('YII_ENV', $environmentConfig['yiiEnvironment']);
 
 require __DIR__ . '/../../vendor/autoload.php';
 require __DIR__ . '/../../vendor/yiisoft/yii2/Yii.php';

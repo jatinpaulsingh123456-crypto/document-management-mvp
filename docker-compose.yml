@@ -11,7 +11,11 @@ services:
     volumes:
       - mysql_data:/var/lib/mysql
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent"]
+      test:
+        [
+          "CMD-SHELL",
+          "mysqladmin ping -h localhost -u root -p$$MYSQL_ROOT_PASSWORD --silent",
+        ]
       interval: 5s
       timeout: 5s
       retries: 20
@@ -24,6 +28,7 @@ services:
     container_name: document-management-backend
     restart: unless-stopped
     environment:
+      APP_ENV: ${APP_ENV:-development}
       DB_HOST: mysql
       DB_PORT: 3306
       DB_NAME: ${DB_NAME:-document_management}
@@ -42,7 +47,8 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       args:
-        VITE_API_BASE_URL: /api/v1
+        VITE_API_BASE_URL: ${VITE_API_BASE_URL:-/api/v1}
+        VITE_APP_ENV: ${APP_ENV:-development}
     container_name: document-management-frontend
     restart: unless-stopped
     ports:
